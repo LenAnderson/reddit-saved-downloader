@@ -92,11 +92,14 @@ export class Thing {
 		if (handled) {
 			if (success) {
 				this.element.classList.add('r-sd--success');
+				this.isDownloaded = true;
 			} else {
 				this.element.classList.add('r-sd--failure');
+				this.isDownloaded = false;
 			}
+		} else {
+			this.isDownloaded = false;
 		}
-		return true;
 	}
 
 	async downloadUrl(/**@type{String}*/folder=null, /**@type{String}*/url=null) {
@@ -130,7 +133,7 @@ export class Thing {
 					success = true;
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -150,7 +153,7 @@ export class Thing {
 					success = true;
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -165,7 +168,7 @@ export class Thing {
 					success = true;
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -190,7 +193,7 @@ export class Thing {
 					}
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -215,7 +218,7 @@ export class Thing {
 						success = true;
 					} catch (ex) {
 						success = false;
-						log('FAILED', ex);
+						log('FAILED', this, url, ex);
 					}
 				}
 				break;
@@ -241,7 +244,7 @@ export class Thing {
 			// link to an album: get album info and return direct links
 			const parts = url.replace(/^https?:\/\/[^/]+/, '').split('/');
 			const id = parts[parts.length-1];
-			const result = await GM_xmlhttpRequestAsync({
+			const result = await xhr({
 				url: `https://api.imgur.com/3/album/${id}`,
 				headers: {
 					'Authorization': `Client-ID ${imgurClientId}`
@@ -254,7 +257,7 @@ export class Thing {
 		const parts = url.replace(/^https?:\/\/[^/]+/, '').split('/');
 		const id = parts[parts.length-1];
 		log('imgur:', `https://api.imgur.com/3/image/${id}`);
-		const result = await GM_xmlhttpRequestAsync({
+		const result = await xhr({
 			url: `https://api.imgur.com/3/image/${id}`,
 			headers: {
 				'Authorization': `Client-ID ${imgurClientId}`
@@ -265,5 +268,13 @@ export class Thing {
 		}
 		const data = JSON.parse(result.responseText);
 		return [data.data.link.replace(/\.(gifv|gif)$/, '.mp4')];
+	}
+
+
+	async unsave() {
+		log('Thing.unsave', this);
+		$(this.element, '.link-unsave-button > a, .comment-unsave-button > a').click();
+		await wait(100);
+		this.element.remove();
 	}
 }

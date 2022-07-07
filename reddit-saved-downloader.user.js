@@ -2,7 +2,7 @@
 // @name         Reddit - Saved Downloader
 // @namespace    https://github.com/LenAnderson/
 // @downloadURL  https://github.com/LenAnderson/reddit-saved-downloader/raw/master/reddit-saved-downloader.user.js
-// @version      1.0
+// @version      1.1
 // @description  Simple way to download media from saved posts and comments.
 // @author       LenAnderson
 // @match        https://www.reddit.com/user/*/saved/*
@@ -151,6 +151,39 @@ class Binding {
 }
 
 
+// src\lib\download.js
+const download = async(details)=>{
+	log('download', details);
+	details.name = details.name.replace(/\?.*$/, '');
+	return new Promise((resolve,reject)=>{
+		details.onload = resolve;
+		details.onerror = reject;
+		GM_download(details);
+	});
+};
+
+
+// src\lib\xhr.js
+
+
+const xhr = async(details)=>{
+	log('xhr', details);
+	return new Promise((resolve,reject)=>{
+		details.onload = resolve;
+		details.onerror = reject;
+		GM_xmlhttpRequest(details);
+	});
+};
+
+const xhrHtml = async(details)=>{
+	log('xhrHtml', details);
+	const response = await xhr(details);
+	const html = document.createElement('div');
+	html.innerHTML = response.responseText;
+	return html;
+}
+
+
 // src\Thing.js
 
 
@@ -246,11 +279,14 @@ class Thing {
 		if (handled) {
 			if (success) {
 				this.element.classList.add('r-sd--success');
+				this.isDownloaded = true;
 			} else {
 				this.element.classList.add('r-sd--failure');
+				this.isDownloaded = false;
 			}
+		} else {
+			this.isDownloaded = false;
 		}
-		return true;
 	}
 
 	async downloadUrl(/**@type{String}*/folder=null, /**@type{String}*/url=null) {
@@ -284,7 +320,7 @@ class Thing {
 					success = true;
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -304,7 +340,7 @@ class Thing {
 					success = true;
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -319,7 +355,7 @@ class Thing {
 					success = true;
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -344,7 +380,7 @@ class Thing {
 					}
 				} catch (ex) {
 					success = false;
-					log('FAILED', this, url);
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}
@@ -369,7 +405,7 @@ class Thing {
 						success = true;
 					} catch (ex) {
 						success = false;
-						log('FAILED', ex);
+						log('FAILED', this, url, ex);
 					}
 				}
 				break;
@@ -395,7 +431,7 @@ class Thing {
 			// link to an album: get album info and return direct links
 			const parts = url.replace(/^https?:\/\/[^/]+/, '').split('/');
 			const id = parts[parts.length-1];
-			const result = await GM_xmlhttpRequestAsync({
+			const result = await xhr({
 				url: `https://api.imgur.com/3/album/${id}`,
 				headers: {
 					'Authorization': `Client-ID ${imgurClientId}`
@@ -408,7 +444,7 @@ class Thing {
 		const parts = url.replace(/^https?:\/\/[^/]+/, '').split('/');
 		const id = parts[parts.length-1];
 		log('imgur:', `https://api.imgur.com/3/image/${id}`);
-		const result = await GM_xmlhttpRequestAsync({
+		const result = await xhr({
 			url: `https://api.imgur.com/3/image/${id}`,
 			headers: {
 				'Authorization': `Client-ID ${imgurClientId}`
@@ -419,6 +455,14 @@ class Thing {
 		}
 		const data = JSON.parse(result.responseText);
 		return [data.data.link.replace(/\.(gifv|gif)$/, '.mp4')];
+	}
+
+
+	async unsave() {
+		log('Thing.unsave', this);
+		$(this.element, '.link-unsave-button > a, .comment-unsave-button > a').click();
+		await wait(100);
+		this.element.remove();
 	}
 }
 
@@ -571,6 +615,9 @@ class Group {
 
 				const unsaveBtn = document.createElement('button'); {
 					unsaveBtn.textContent = 'unsave';
+					unsaveBtn.addEventListener('click', async()=>{
+						await this.unsave();
+					});
 					actions.append(unsaveBtn);
 				}
 				
@@ -583,7 +630,7 @@ class Group {
 					}
 					const text = document.createElement('div'); {
 						text.classList.add('r-sd--progress--text');
-						Binding.create(this, 'downloaded', text, 'textContent', v=>this.downloaded ? `${this.downloaded} / ${this.things.length}` : '');
+						Binding.create(this, 'downloaded', text, 'textContent', v=>this.downloaded ? `${Math.floor(this.downloaded)} / ${this.things.length}` : '');
 						prog.append(text);
 					}
 					actions.append(prog);
@@ -622,31 +669,19 @@ class Group {
 		log('Group.download', this);
 		this.downloaded = 0;
 		for (const thing of this.things) {
-			this.downloaded++;
-			const success = await thing.download(this.title);
+			this.downloaded += 0.5;
+			await thing.download(this.title);
+			this.downloaded += 0.5;
 		}
 	}
-}
 
-
-// src\lib\xhr.js
-
-
-const xhr = async(details)=>{
-	log('xhr', details);
-	return new Promise((resolve,reject)=>{
-		details.onload = resolve;
-		details.onerror = reject;
-		GM_xmlhttpRequest(details);
-	});
-};
-
-const xhrHtml = async(details)=>{
-	log('xhrHtml', details);
-	const response = await xhr(details);
-	const html = document.createElement('div');
-	html.innerHTML = response.responseText;
-	return html;
+	async unsave() {
+		log('Group.unsave', this);
+		for (const thing of this.things.filter(it=>it.isDownloaded)) {
+			await thing.unsave();
+			this.things.splice(this.things.indexOf(thing), 1);
+		}
+	}
 }
 
 
@@ -847,6 +882,7 @@ class Downloader {
 	}
 
 	sortGroups() {
+		this.groups.filter(it=>it.things.length==0).forEach(it=>it.element.remove());
 		this.groups = this.groups.filter(it=>it.things.length);
 		this.groups.sort((a,b)=>{
 			const an = a.title.toLowerCase();
@@ -902,18 +938,6 @@ class Downloader {
 		this.renderGroups();
 	}
 }
-
-
-// src\lib\download.js
-const download = async(details)=>{
-	log('download', details);
-	details.name = details.name.replace(/\?.*$/, '');
-	return new Promise((resolve,reject)=>{
-		details.onload = resolve;
-		details.onerror = reject;
-		GM_download(details);
-	});
-};
 // ---------------- /IMPORTS ----------------
 
 

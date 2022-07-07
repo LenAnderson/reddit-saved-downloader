@@ -194,6 +194,7 @@ export class Downloader {
 	}
 
 	sortGroups() {
+		this.groups.filter(it=>it.things.length==0).forEach(it=>it.element.remove());
 		this.groups = this.groups.filter(it=>it.things.length);
 		this.groups.sort((a,b)=>{
 			const an = a.title.toLowerCase();

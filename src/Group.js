@@ -145,6 +145,9 @@ export class Group {
 
 				const unsaveBtn = document.createElement('button'); {
 					unsaveBtn.textContent = 'unsave';
+					unsaveBtn.addEventListener('click', async()=>{
+						await this.unsave();
+					});
 					actions.append(unsaveBtn);
 				}
 				
@@ -157,7 +160,7 @@ export class Group {
 					}
 					const text = document.createElement('div'); {
 						text.classList.add('r-sd--progress--text');
-						Binding.create(this, 'downloaded', text, 'textContent', v=>this.downloaded ? `${this.downloaded} / ${this.things.length}` : '');
+						Binding.create(this, 'downloaded', text, 'textContent', v=>this.downloaded ? `${Math.floor(this.downloaded)} / ${this.things.length}` : '');
 						prog.append(text);
 					}
 					actions.append(prog);
@@ -196,8 +199,17 @@ export class Group {
 		log('Group.download', this);
 		this.downloaded = 0;
 		for (const thing of this.things) {
-			this.downloaded++;
-			const success = await thing.download(this.title);
+			this.downloaded += 0.5;
+			await thing.download(this.title);
+			this.downloaded += 0.5;
+		}
+	}
+
+	async unsave() {
+		log('Group.unsave', this);
+		for (const thing of this.things.filter(it=>it.isDownloaded)) {
+			await thing.unsave();
+			this.things.splice(this.things.indexOf(thing), 1);
 		}
 	}
 }
