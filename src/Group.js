@@ -189,6 +189,10 @@ export class Group {
 
 	render(/**@type{HTMLElement}*/siteTable) {
 		siteTable.append(this.element);
+		this.renderThings();
+	}
+
+	renderThings() {
 		this.things.forEach(thing=>this.element.insertAdjacentElement('afterend', thing.element));
 	}
 

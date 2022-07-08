@@ -2,7 +2,7 @@
 // @name         Reddit - Saved Downloader
 // @namespace    https://github.com/LenAnderson/
 // @downloadURL  https://github.com/LenAnderson/reddit-saved-downloader/raw/master/reddit-saved-downloader.user.js
-// @version      1.1
+// @version      1.2
 // @description  Simple way to download media from saved posts and comments.
 // @author       LenAnderson
 // @match        https://www.reddit.com/user/*/saved/*
@@ -659,6 +659,10 @@ class Group {
 
 	render(/**@type{HTMLElement}*/siteTable) {
 		siteTable.append(this.element);
+		this.renderThings();
+	}
+
+	renderThings() {
 		this.things.forEach(thing=>this.element.insertAdjacentElement('afterend', thing.element));
 	}
 
@@ -907,8 +911,17 @@ class Downloader {
 				}
 			})
 		}
+		const oldIdx = this.groups.indexOf(group);
 		this.sortGroups();
-		this.renderGroups();
+		const newIdx = this.groups.indexOf(group);
+		if (oldIdx != newIdx) {
+			if (newIdx < this.groups.length - 1) {
+				this.groups[newIdx+1].element.insertAdjacentElement('beforebegin', group.element);
+				group.renderThings();
+			} else {
+				group.render(this.siteTable);
+			}
+		}
 	}
 
 	thingUserChanged(/**@type{Thing}*/thing, /**@type{String}*/user) {

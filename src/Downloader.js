@@ -219,8 +219,17 @@ export class Downloader {
 				}
 			})
 		}
+		const oldIdx = this.groups.indexOf(group);
 		this.sortGroups();
-		this.renderGroups();
+		const newIdx = this.groups.indexOf(group);
+		if (oldIdx != newIdx) {
+			if (newIdx < this.groups.length - 1) {
+				this.groups[newIdx+1].element.insertAdjacentElement('beforebegin', group.element);
+				group.renderThings();
+			} else {
+				group.render(this.siteTable);
+			}
+		}
 	}
 
 	thingUserChanged(/**@type{Thing}*/thing, /**@type{String}*/user) {
