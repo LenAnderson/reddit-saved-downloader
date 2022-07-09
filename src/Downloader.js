@@ -162,7 +162,7 @@ export class Downloader {
 					group.onUpdate = ()=>this.groupUpdated(group);
 				}
 			} else if (this.nonSpec.indexOf(thing.subreddit) == -1) {
-				group = this.groups.find(it=>it.subreddit == thing.subreddit);
+				group = this.groups.find(it=>it.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '') == thing.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, ''));
 				if (!group) {
 					group = new Group(thing.subreddit, thing.subreddit);
 					group.save();
