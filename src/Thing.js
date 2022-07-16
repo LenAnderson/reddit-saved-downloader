@@ -23,7 +23,7 @@ export class Thing {
 	constructor(/**@type{HTMLElement}*/element) {
 		this.element = element;
 
-		this.subreddit = $(element, '.subreddit')?.textContent?.substring(2);
+		this.subreddit = $(element, '.subreddit')?.textContent?.replace(/^(r\/)?/, '');
 		this.user = $(element, '.author')?.textContent;
 		this.title = $(element, 'a.title')?.textContent;
 		this.url = $(element, 'a.title')?.href;
