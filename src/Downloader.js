@@ -162,7 +162,8 @@ export class Downloader {
 					group.onUpdate = ()=>this.groupUpdated(group);
 				}
 			} else if (this.nonSpec.indexOf(thing.subreddit) == -1) {
-				group = this.groups.find(it=>it.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '') == thing.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, ''));
+				const cleanSub = thing.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '');
+				group = this.groups.find(it=>cleanSub.search(it.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '')) != -1);
 				if (!group) {
 					group = new Group(thing.subreddit, thing.subreddit);
 					group.save();
