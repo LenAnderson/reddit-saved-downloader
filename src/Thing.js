@@ -45,7 +45,7 @@ export class Thing {
 				userBtn.addEventListener('click', ()=>this.changeUser());
 				actions.append(userBtn);
 			}
-			$(element, '.thumbnail').insertAdjacentElement('afterend', actions);
+			$(element, '.thumbnail')?.insertAdjacentElement('afterend', actions);
 		}
 	}
 
