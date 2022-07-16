@@ -166,7 +166,6 @@ export class Downloader {
 				group = this.groups.find(it=>cleanSub.search(it.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '')) != -1);
 				if (!group) {
 					group = new Group(thing.subreddit, thing.subreddit);
-					group.save();
 					this.groups.push(group);
 					group.onUpdate = ()=>this.groupUpdated(group);
 				}
@@ -175,7 +174,6 @@ export class Downloader {
 				group = this.groups.find(it=>title.search(it.title.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '') || it.title.toLowerCase()) != -1);
 				if (!group) {
 					group = new Group(title, title);
-					group.save();
 					this.groups.push(group);
 					group.onUpdate = ()=>this.groupUpdated(group);
 				}
