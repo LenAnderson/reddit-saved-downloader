@@ -4,6 +4,7 @@ import { Thing } from "./Thing.js";
 
 export class Group {
 	/**@type{String}*/ subreddit;
+	/**@type{Boolean}*/ isSaved;
 
 	/**@type{String}*/ originalTitle;
 	/**@type{String}*/ title;
@@ -41,10 +42,11 @@ export class Group {
 
 
 
-	constructor(/**@type{String}*/subreddit, /**@type{String}*/title) {
+	constructor(/**@type{String}*/subreddit, /**@type{String}*/title, /**@type{Boolean}*/isSaved) {
 		this.subreddit = subreddit;
 		this.originalTitle = title;
 		this.title = title;
+		this.isSaved = isSaved;
 
 		this.buildDom();
 	}
@@ -66,6 +68,7 @@ export class Group {
 			localStorage.setItem('r-sd--groups', JSON.stringify(data));
 		}
 		this.originalTitle = this.title;
+		this.isSaved = true;
 		if (this.onUpdate) {
 			this.onUpdate();
 		}

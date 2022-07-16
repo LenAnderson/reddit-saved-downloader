@@ -44,7 +44,7 @@ export class Downloader {
 		this.nonSpec = JSON.parse(localStorage.getItem('r-sd--nonSpec') ?? '[]');
 		this.target = localStorage.getItem('r-ds--target') ?? 'reddit';
 
-		this.groups = JSON.parse(localStorage.getItem('r-sd--groups') ?? '[]').map(it=>new Group(it.subreddit, it.title));
+		this.groups = JSON.parse(localStorage.getItem('r-sd--groups') ?? '[]').map(it=>new Group(it.subreddit, it.title, true));
 		this.groups.forEach(it=>it.onUpdate = ()=>this.groupUpdated(it));
 
 		this.navItem = $('a[href*="/saved/"]');
@@ -187,8 +187,17 @@ export class Downloader {
 	}
 
 	renderGroups() {
+		let prevSaved = null;
 		this.groups.forEach(group=>{
+			if (!group.isSaved && prevSaved === true) {
+				const divider = document.createElement('div'); {
+					divider.classList.add('r-sd--divider');
+					divider.textContent = '? ? ?';
+					this.siteTable.append(divider);
+				}
+			}
 			group.render(this.siteTable);
+			prevSaved = group.isSaved;
 		});
 	}
 
@@ -196,6 +205,8 @@ export class Downloader {
 		this.groups.filter(it=>it.things.length==0).forEach(it=>it.element.remove());
 		this.groups = this.groups.filter(it=>it.things.length);
 		this.groups.sort((a,b)=>{
+			if (a.isSaved && !b.isSaved) return -1;
+			if (!a.isSaved && b.isSaved) return 1;
 			const an = a.title.toLowerCase();
 			const bn = b.title.toLowerCase();
 			if (an > bn) return 1;
