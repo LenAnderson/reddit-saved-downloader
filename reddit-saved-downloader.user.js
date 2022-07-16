@@ -210,7 +210,7 @@ class Thing {
 	constructor(/**@type{HTMLElement}*/element) {
 		this.element = element;
 
-		this.subreddit = $(element, '.subreddit')?.textContent?.substring(2);
+		this.subreddit = $(element, '.subreddit')?.textContent?.replace(/^(r\/)?/, '');
 		this.user = $(element, '.author')?.textContent;
 		this.title = $(element, 'a.title')?.textContent;
 		this.url = $(element, 'a.title')?.href;
@@ -232,7 +232,7 @@ class Thing {
 				userBtn.addEventListener('click', ()=>this.changeUser());
 				actions.append(userBtn);
 			}
-			$(element, '.thumbnail').insertAdjacentElement('afterend', actions);
+			$(element, '.thumbnail')?.insertAdjacentElement('afterend', actions);
 		}
 	}
 
@@ -474,6 +474,7 @@ class Thing {
 
 class Group {
 	/**@type{String}*/ subreddit;
+	/**@type{Boolean}*/ isSaved;
 
 	/**@type{String}*/ originalTitle;
 	/**@type{String}*/ title;
@@ -511,10 +512,11 @@ class Group {
 
 
 
-	constructor(/**@type{String}*/subreddit, /**@type{String}*/title) {
+	constructor(/**@type{String}*/subreddit, /**@type{String}*/title, /**@type{Boolean}*/isSaved) {
 		this.subreddit = subreddit;
 		this.originalTitle = title;
 		this.title = title;
+		this.isSaved = isSaved;
 
 		this.buildDom();
 	}
@@ -536,6 +538,7 @@ class Group {
 			localStorage.setItem('r-sd--groups', JSON.stringify(data));
 		}
 		this.originalTitle = this.title;
+		this.isSaved = true;
 		if (this.onUpdate) {
 			this.onUpdate();
 		}
@@ -736,14 +739,14 @@ class Downloader {
 		this.nonSpec = JSON.parse(localStorage.getItem('r-sd--nonSpec') ?? '[]');
 		this.target = localStorage.getItem('r-ds--target') ?? 'reddit';
 
-		this.groups = JSON.parse(localStorage.getItem('r-sd--groups') ?? '[]').map(it=>new Group(it.subreddit, it.title));
+		this.groups = JSON.parse(localStorage.getItem('r-sd--groups') ?? '[]').map(it=>new Group(it.subreddit, it.title, true));
 		this.groups.forEach(it=>it.onUpdate = ()=>this.groupUpdated(it));
 
 		this.navItem = $('a[href*="/saved/"]');
 		this.siteTable = $('#siteTable');
 
 		const style = document.createElement('style'); {
-			style.innerHTML = '@keyframes pulse-font-size {  0% {    transform: translateZ(0px);  }  100% {    transform: translateZ(100px);  }}.tabmenu li.selected a.r-sd--settings {  color: #808080;  border: none;}.tabmenu li.selected a.r-sd--settings:hover {  color: #000000;}.r-sd--spinner {  overflow: hidden;  perspective: 500px;  transform-style: preserve-3d;}.r-sd--spinner:after {  content: \"Loading...\";  animation-name: pulse-font-size;  animation-timing-function: ease-in-out;  animation-duration: 1s;  animation-iteration-count: infinite;  animation-direction: alternate;  display: block;  font-size: 24px;  line-height: 5;  text-align: center;}.r-sd--group {  margin-bottom: 2em;}.r-sd--group > .r-sd--group--header {  display: flex;  flex-direction: row;  align-items: center;  padding: 13px 0 3px 0;}.r-sd--group > .r-sd--group--header > .r-sd--group--title {  font-size: 12px;  font-weight: bold;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--header > .r-sd--group--subreddit {  font-size: 12px;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--actions {  display: flex;  flex-direction: row;  align-items: center;}.r-sd--group > .r-sd--group--actions > button {  margin: 0 0.5em;}.r-sd--group > .r-sd--group--actions > .r-sd--progress {  background-color: #f5f5f5;  border: 1px solid #5f99cf;  border-radius: 5px;  height: 20px;  margin: 0 0.5em;  position: relative;  width: 400px;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--inner {  background-color: #eff7ff;  border-radius: 5px;  height: 100%;  transition: ease-in-out 200ms;  width: 0%;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--text {  bottom: 0;  left: 0;  line-height: 20px;  position: absolute;  right: 0;  text-align: center;  top: 0;  z-index: 10;}.thing.r-sd--success {  background-color: rgba(0, 255, 0, 0.125);}.thing.r-sd--failure {  background-color: rgba(255, 0, 0, 0.125);}.thing .r-sd--thing--actions {  float: left;  margin-right: 5px;}.thing .r-sd--thing--actions > button {  font-size: 1em;}.thing .r-sd--thing--actions > button.r-sd--thing--actions--title {  display: none;}.thing.r-sd--nonSpec .thing .r-sd--thing--actions > button {  display: inline;}';
+			style.innerHTML = '@keyframes pulse-font-size {  0% {    transform: translateZ(0px);  }  100% {    transform: translateZ(100px);  }}.tabmenu li.selected a.r-sd--settings {  color: #808080;  border: none;}.tabmenu li.selected a.r-sd--settings:hover {  color: #000000;}.r-sd--spinner {  overflow: hidden;  perspective: 500px;  transform-style: preserve-3d;}.r-sd--spinner:after {  content: \"Loading...\";  animation-name: pulse-font-size;  animation-timing-function: ease-in-out;  animation-duration: 1s;  animation-iteration-count: infinite;  animation-direction: alternate;  display: block;  font-size: 24px;  line-height: 5;  text-align: center;}.r-sd--group {  margin-bottom: 2em;}.r-sd--group > .r-sd--group--header {  display: flex;  flex-direction: row;  align-items: center;  padding: 13px 0 3px 0;}.r-sd--group > .r-sd--group--header > .r-sd--group--title {  font-size: 12px;  font-weight: bold;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--header > .r-sd--group--subreddit {  font-size: 12px;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--actions {  display: flex;  flex-direction: row;  align-items: center;}.r-sd--group > .r-sd--group--actions > button {  margin: 0 0.5em;}.r-sd--group > .r-sd--group--actions > .r-sd--progress {  background-color: #f5f5f5;  border: 1px solid #5f99cf;  border-radius: 5px;  height: 20px;  margin: 0 0.5em;  position: relative;  width: 400px;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--inner {  background-color: #eff7ff;  border-radius: 5px;  height: 100%;  transition: ease-in-out 200ms;  width: 0%;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--text {  bottom: 0;  left: 0;  line-height: 20px;  position: absolute;  right: 0;  text-align: center;  top: 0;  z-index: 10;}.thing.r-sd--success {  background-color: rgba(0, 255, 0, 0.125);}.thing.r-sd--failure {  background-color: rgba(255, 0, 0, 0.125);}.thing .r-sd--thing--actions {  float: left;  margin-right: 5px;}.thing .r-sd--thing--actions > button {  font-size: 1em;}.thing .r-sd--thing--actions > button.r-sd--thing--actions--title {  display: none;}.thing.r-sd--nonSpec .thing .r-sd--thing--actions > button {  display: inline;}.r-sd--divider {  background-color: #f5f5f5;  font-weight: bold;  color: #808080;  margin-top: 3em;  padding: 0.5em;  text-align: center;}';
 			document.body.append(style);
 		}
 		
@@ -854,10 +857,10 @@ class Downloader {
 					group.onUpdate = ()=>this.groupUpdated(group);
 				}
 			} else if (this.nonSpec.indexOf(thing.subreddit) == -1) {
-				group = this.groups.find(it=>it.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '') == thing.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, ''));
+				const cleanSub = thing.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '');
+				group = this.groups.find(it=>cleanSub.search(it.subreddit.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '')) != -1);
 				if (!group) {
 					group = new Group(thing.subreddit, thing.subreddit);
-					group.save();
 					this.groups.push(group);
 					group.onUpdate = ()=>this.groupUpdated(group);
 				}
@@ -866,7 +869,6 @@ class Downloader {
 				group = this.groups.find(it=>title.search(it.title.toLowerCase().replace(/\s+/g, '').replace(/[^a-z]+/g, '') || it.title.toLowerCase()) != -1);
 				if (!group) {
 					group = new Group(title, title);
-					group.save();
 					this.groups.push(group);
 					group.onUpdate = ()=>this.groupUpdated(group);
 				}
@@ -880,8 +882,17 @@ class Downloader {
 	}
 
 	renderGroups() {
+		let prevSaved = null;
 		this.groups.forEach(group=>{
+			if (!group.isSaved && prevSaved === true) {
+				const divider = document.createElement('div'); {
+					divider.classList.add('r-sd--divider');
+					divider.textContent = '? ? ?';
+					this.siteTable.append(divider);
+				}
+			}
 			group.render(this.siteTable);
+			prevSaved = group.isSaved;
 		});
 	}
 
@@ -889,6 +900,8 @@ class Downloader {
 		this.groups.filter(it=>it.things.length==0).forEach(it=>it.element.remove());
 		this.groups = this.groups.filter(it=>it.things.length);
 		this.groups.sort((a,b)=>{
+			if (a.isSaved && !b.isSaved) return -1;
+			if (!a.isSaved && b.isSaved) return 1;
 			const an = a.title.toLowerCase();
 			const bn = b.title.toLowerCase();
 			if (an > bn) return 1;
