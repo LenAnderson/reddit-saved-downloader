@@ -2,19 +2,25 @@
 // @name         Reddit - Saved Downloader
 // @namespace    https://github.com/LenAnderson/
 // @downloadURL  https://github.com/LenAnderson/reddit-saved-downloader/raw/master/reddit-saved-downloader.user.js
-// @version      1.3
+// @version      1.5
 // @description  Simple way to download media from saved posts and comments.
 // @author       LenAnderson
 // @match        https://www.reddit.com/user/*/saved/*
 // @match        https://www.reddit.com/user/*/saved
+// @match        https://*.redgifs.com/watch/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=reddit.com
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_openInTab
 // @connect      gfycat.com
 // @connect      redgifs.com
 // @connect      api.imgur.com
 // @connect      v.redd.it
 // ==/UserScript==
+
+
 
 
 
@@ -306,7 +312,43 @@ class Thing {
 		].join('-');
 
 		switch (domain) {
-			case 'redgifs.com':
+			case 'redgifs.com': {
+				handled = true;
+				const key = url.replace(/^.+\/([^\/]+)$/, '$1');
+				GM_setValue(`r-sd--redgifs--${key}`, 'waiting');
+				GM_setValue(`r-sd--redgifs--${key}--filename`, `${this.target}/${folder}/Random/${key}.mp4`);
+				const red = GM_openInTab(`${url}#r-sd--dl-this`);
+				let done = false;
+				while (!done) {
+					await wait(100);
+					const status = GM_getValue(`r-sd--redgifs--${key}`);
+					log(key, status);
+					switch (status) {
+						case 'waiting': {
+							break;
+						}
+						case 'downloading': {
+							break;
+						}
+						case 'done': {
+							done = true;
+							success = true;
+							break;
+						}
+						case 'error': {
+							done = true;
+							success = false;
+							break;
+						}
+						default: {
+							log(key, 'unknown status');
+							break;
+						}
+					}
+				}
+				red.close();
+				break;
+			}
 			case 'gfycat.com': {
 				handled = true;
 				const result = await xhrHtml({url:url});
@@ -965,8 +1007,57 @@ class Downloader {
 	}
 }
 
+
+
+// src\redgifs\RedgifsDownloader.js
+
+
+
+class RedgifsDownloader {
+	async run() {
+		const key = location.pathname.replace(/^.+\/([^\/]+)$/, '$1');
+		let found = false;
+		let qualityButton;
+		while (!found) {
+			log('finding quality button...');
+			const buttons = $$('.player-buttons > .options-buttons > .has-badge').filter(it=>$(it, '.icon-badge').textContent == 'SD').concat($$('.gif-quality'));
+			if (buttons.length > 0) {
+				log('found');
+				found = true;
+				qualityButton = buttons[0];
+			} else {
+				log('not found');
+				await wait(100);
+			}
+		}
+		qualityButton.click();
+		await wait(100);
+		const url = $('.player-video > video, .videoWrapper > video').src;
+		const fn = GM_getValue(`r-sd--redgifs--${key}--filename`);
+		GM_setValue(`r-sd--redgifs--${key}`, 'downloading');
+		try {
+			await download({
+				url: url,
+				name: fn,
+			});
+			GM_setValue(`r-sd--redgifs--${key}`, 'done');
+		} catch (ex) {
+			log('FAILED', ex);
+			GM_setValue(`r-sd--redgifs--${key}`, 'error');
+		}
+
+	}
+}
 // ---------------- /IMPORTS ----------------
 
 
-	const dl = new Downloader();
+	if (location.host == 'www.reddit.com') {
+		const dl = new Downloader();
+	} else if (location.host.search('redgifs.com') > -1) {
+		if (location.hash == '#r-sd--dl-this'); {
+			log('dl this!');
+			const dl = new RedgifsDownloader();
+			dl.run();
+		}
+	}
 })();

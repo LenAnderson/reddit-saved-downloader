@@ -119,7 +119,43 @@ export class Thing {
 		].join('-');
 
 		switch (domain) {
-			case 'redgifs.com':
+			case 'redgifs.com': {
+				handled = true;
+				const key = url.replace(/^.+\/([^\/]+)$/, '$1');
+				GM_setValue(`r-sd--redgifs--${key}`, 'waiting');
+				GM_setValue(`r-sd--redgifs--${key}--filename`, `${this.target}/${folder}/Random/${key}.mp4`);
+				const red = GM_openInTab(`${url}#r-sd--dl-this`);
+				let done = false;
+				while (!done) {
+					await wait(100);
+					const status = GM_getValue(`r-sd--redgifs--${key}`);
+					log(key, status);
+					switch (status) {
+						case 'waiting': {
+							break;
+						}
+						case 'downloading': {
+							break;
+						}
+						case 'done': {
+							done = true;
+							success = true;
+							break;
+						}
+						case 'error': {
+							done = true;
+							success = false;
+							break;
+						}
+						default: {
+							log(key, 'unknown status');
+							break;
+						}
+					}
+				}
+				red.close();
+				break;
+			}
 			case 'gfycat.com': {
 				handled = true;
 				const result = await xhrHtml({url:url});
