@@ -2,7 +2,7 @@
 // @name         Reddit - Saved Downloader
 // @namespace    https://github.com/LenAnderson/
 // @downloadURL  https://github.com/LenAnderson/reddit-saved-downloader/raw/master/reddit-saved-downloader.user.js
-// @version      1.5
+// @version      1.6
 // @description  Simple way to download media from saved posts and comments.
 // @author       LenAnderson
 // @match        https://www.reddit.com/user/*/saved/*
@@ -18,6 +18,7 @@
 // @connect      redgifs.com
 // @connect      api.imgur.com
 // @connect      v.redd.it
+// @connect      i.imx.to
 // ==/UserScript==
 
 
@@ -449,6 +450,21 @@ class Thing {
 						success = false;
 						log('FAILED', this, url, ex);
 					}
+				}
+				break;
+			}
+			case 'i.imx.to': {
+				handled = true;
+				const fn = `${ts} ${url.replace(/^.+\/([^\/]+)$/, '$1')}`;
+				try {
+					await download({
+						url: url,
+						name: `${this.target}/${folder}/Random/${fn}`
+					});
+					success = true;
+				} catch (ex) {
+					success = false;
+					log('FAILED', this, url, ex);
 				}
 				break;
 			}

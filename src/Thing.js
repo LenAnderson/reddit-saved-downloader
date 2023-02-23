@@ -259,6 +259,21 @@ export class Thing {
 				}
 				break;
 			}
+			case 'i.imx.to': {
+				handled = true;
+				const fn = `${ts} ${url.replace(/^.+\/([^\/]+)$/, '$1')}`;
+				try {
+					await download({
+						url: url,
+						name: `${this.target}/${folder}/Random/${fn}`
+					});
+					success = true;
+				} catch (ex) {
+					success = false;
+					log('FAILED', this, url, ex);
+				}
+				break;
+			}
 			default: {
 				log('UNHANDLED', this);
 				break;
