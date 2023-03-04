@@ -156,6 +156,7 @@ export class Thing {
 				red.close();
 				break;
 			}
+			case 'thumbs.gfycat.com':
 			case 'gfycat.com': {
 				handled = true;
 				const result = await xhrHtml({url:url});
