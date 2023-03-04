@@ -156,8 +156,10 @@ export class Thing {
 				red.close();
 				break;
 			}
+			case 'thumbs.gfycat.com':
 			case 'gfycat.com': {
 				handled = true;
+				url = url.replace('thumbs.gfycat.com', 'gfycat.com');
 				const result = await xhrHtml({url:url});
 				const mediaUrl = $(result, '[property="og:video"]').getAttribute('content').replace('thumbs.gfycat', 'giant.gfycat').replace('-mobile.mp4', '.mp4');
 				const fn = `${ts} ${mediaUrl.replace(/^.+\/([^\/]+)$/, '$1')}`;

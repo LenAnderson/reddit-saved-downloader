@@ -2,7 +2,7 @@
 // @name         Reddit - Saved Downloader
 // @namespace    https://github.com/LenAnderson/
 // @downloadURL  https://github.com/LenAnderson/reddit-saved-downloader/raw/master/reddit-saved-downloader.user.js
-// @version      1.6
+// @version      1.7
 // @description  Simple way to download media from saved posts and comments.
 // @author       LenAnderson
 // @match        https://www.reddit.com/user/*/saved/*
@@ -350,8 +350,10 @@ class Thing {
 				red.close();
 				break;
 			}
+			case 'thumbs.gfycat.com':
 			case 'gfycat.com': {
 				handled = true;
+				url = url.replace('thumbs.gfycat.com', 'gfycat.com');
 				const result = await xhrHtml({url:url});
 				const mediaUrl = $(result, '[property="og:video"]').getAttribute('content').replace('thumbs.gfycat', 'giant.gfycat').replace('-mobile.mp4', '.mp4');
 				const fn = `${ts} ${mediaUrl.replace(/^.+\/([^\/]+)$/, '$1')}`;
