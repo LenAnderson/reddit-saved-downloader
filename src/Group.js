@@ -114,6 +114,7 @@ export class Group {
 
 				const titleBtn = document.createElement('button'); {
 					titleBtn.textContent = 'title';
+					titleBtn.title = 'Change Title\n = download directory'
 					titleBtn.addEventListener('click', ()=>{
 						this.title = prompt('Title', this.title) ?? this.title;
 						this.save();
@@ -123,6 +124,7 @@ export class Group {
 
 				const subBtn = document.createElement('button'); {
 					subBtn.textContent = 'sub';
+					subBtn.title = 'Change Subreddit'
 					subBtn.addEventListener('click', ()=>{
 						this.subreddit = prompt('Title', this.subreddit) ?? this.subreddit;
 						this.save();
@@ -132,6 +134,7 @@ export class Group {
 
 				const specBtn = document.createElement('button'); {
 					specBtn.textContent = 'spec';
+					Binding.create(this, 'isNonSpec', specBtn, 'title', v=>`make subreddit ${this.isNonSpec?'specific (single group)':'non-specific (multiple groups)'}`);
 					specBtn.addEventListener('click', ()=>{
 						this.isNonSpec = !this.isNonSpec;
 					});
@@ -140,6 +143,7 @@ export class Group {
 
 				const downloadBtn = document.createElement('button'); {
 					downloadBtn.textContent = 'download';
+					downloadBtn.title = 'Download Content';
 					downloadBtn.addEventListener('click', async()=>{
 						await this.download();
 					});
@@ -148,6 +152,7 @@ export class Group {
 
 				const unsaveBtn = document.createElement('button'); {
 					unsaveBtn.textContent = 'unsave';
+					unsaveBtn.title = 'Unsave Downloaded Content\n removes all green posts';
 					unsaveBtn.addEventListener('click', async()=>{
 						await this.unsave();
 					});
