@@ -119,6 +119,7 @@ export class Thing {
 		].join('-');
 
 		switch (domain) {
+			case 'v3.redgifs.com':
 			case 'redgifs.com': {
 				handled = true;
 				const key = url.replace(/^.+\/([^\/]+)$/, '$1');
