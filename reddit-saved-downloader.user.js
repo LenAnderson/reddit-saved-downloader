@@ -2,7 +2,7 @@
 // @name         Reddit - Saved Downloader
 // @namespace    https://github.com/LenAnderson/
 // @downloadURL  https://github.com/LenAnderson/reddit-saved-downloader/raw/master/reddit-saved-downloader.user.js
-// @version      1.7
+// @version      1.10
 // @description  Simple way to download media from saved posts and comments.
 // @author       LenAnderson
 // @match        https://www.reddit.com/user/*/saved/*
@@ -313,6 +313,7 @@ class Thing {
 		].join('-');
 
 		switch (domain) {
+			case 'v3.redgifs.com':
 			case 'redgifs.com': {
 				handled = true;
 				const key = url.replace(/^.+\/([^\/]+)$/, '$1');
@@ -644,6 +645,7 @@ class Group {
 
 				const titleBtn = document.createElement('button'); {
 					titleBtn.textContent = 'title';
+					titleBtn.title = 'Change Title\n = download directory'
 					titleBtn.addEventListener('click', ()=>{
 						this.title = prompt('Title', this.title) ?? this.title;
 						this.save();
@@ -653,6 +655,7 @@ class Group {
 
 				const subBtn = document.createElement('button'); {
 					subBtn.textContent = 'sub';
+					subBtn.title = 'Change Subreddit'
 					subBtn.addEventListener('click', ()=>{
 						this.subreddit = prompt('Title', this.subreddit) ?? this.subreddit;
 						this.save();
@@ -662,6 +665,7 @@ class Group {
 
 				const specBtn = document.createElement('button'); {
 					specBtn.textContent = 'spec';
+					Binding.create(this, 'isNonSpec', specBtn, 'title', v=>`make subreddit ${this.isNonSpec?'specific (single group)':'non-specific (multiple groups)'}`);
 					specBtn.addEventListener('click', ()=>{
 						this.isNonSpec = !this.isNonSpec;
 					});
@@ -670,6 +674,7 @@ class Group {
 
 				const downloadBtn = document.createElement('button'); {
 					downloadBtn.textContent = 'download';
+					downloadBtn.title = 'Download Content';
 					downloadBtn.addEventListener('click', async()=>{
 						await this.download();
 					});
@@ -678,6 +683,7 @@ class Group {
 
 				const unsaveBtn = document.createElement('button'); {
 					unsaveBtn.textContent = 'unsave';
+					unsaveBtn.title = 'Unsave Downloaded Content\n removes all green posts';
 					unsaveBtn.addEventListener('click', async()=>{
 						await this.unsave();
 					});
@@ -806,7 +812,7 @@ class Downloader {
 		this.siteTable = $('#siteTable');
 
 		const style = document.createElement('style'); {
-			style.innerHTML = '@keyframes pulse-font-size {  0% {    transform: translateZ(0px);  }  100% {    transform: translateZ(100px);  }}.tabmenu li.selected a.r-sd--settings {  color: #808080;  border: none;}.tabmenu li.selected a.r-sd--settings:hover {  color: #000000;}.r-sd--spinner {  overflow: hidden;  perspective: 500px;  transform-style: preserve-3d;}.r-sd--spinner:after {  content: \"Loading...\";  animation-name: pulse-font-size;  animation-timing-function: ease-in-out;  animation-duration: 1s;  animation-iteration-count: infinite;  animation-direction: alternate;  display: block;  font-size: 24px;  line-height: 5;  text-align: center;}.r-sd--group {  margin-bottom: 2em;}.r-sd--group > .r-sd--group--header {  display: flex;  flex-direction: row;  align-items: center;  padding: 13px 0 3px 0;}.r-sd--group > .r-sd--group--header > .r-sd--group--title {  font-size: 12px;  font-weight: bold;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--header > .r-sd--group--subreddit {  font-size: 12px;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--actions {  display: flex;  flex-direction: row;  align-items: center;}.r-sd--group > .r-sd--group--actions > button {  margin: 0 0.5em;}.r-sd--group > .r-sd--group--actions > .r-sd--progress {  background-color: #f5f5f5;  border: 1px solid #5f99cf;  border-radius: 5px;  height: 20px;  margin: 0 0.5em;  position: relative;  width: 400px;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--inner {  background-color: #eff7ff;  border-radius: 5px;  height: 100%;  transition: ease-in-out 200ms;  width: 0%;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--text {  bottom: 0;  left: 0;  line-height: 20px;  position: absolute;  right: 0;  text-align: center;  top: 0;  z-index: 10;}.thing.r-sd--success {  background-color: rgba(0, 255, 0, 0.125);}.thing.r-sd--failure {  background-color: rgba(255, 0, 0, 0.125);}.thing .r-sd--thing--actions {  float: left;  margin-right: 5px;}.thing .r-sd--thing--actions > button {  font-size: 1em;}.thing .r-sd--thing--actions > button.r-sd--thing--actions--title {  display: none;}.thing.r-sd--nonSpec .thing .r-sd--thing--actions > button {  display: inline;}.r-sd--divider {  background-color: #f5f5f5;  font-weight: bold;  color: #808080;  margin-top: 3em;  padding: 0.5em;  text-align: center;}';
+			style.innerHTML = '@keyframes pulse-font-size {  0% {    transform: translateZ(0px);  }  100% {    transform: translateZ(100px);  }}.tabmenu li.selected a.r-sd--settings {  color: #808080;  border: none;}.tabmenu li.selected a.r-sd--settings:hover {  color: #000000;}.r-sd--spinner {  overflow: hidden;  perspective: 500px;  transform-style: preserve-3d;}.r-sd--spinner:after {  content: \"Loading...\";  animation-name: pulse-font-size;  animation-timing-function: ease-in-out;  animation-duration: 1s;  animation-iteration-count: infinite;  animation-direction: alternate;  display: block;  font-size: 24px;  line-height: 5;  text-align: center;}.r-sd--group {  margin-bottom: 2em;}.r-sd--group > .r-sd--group--header {  display: flex;  flex-direction: row;  align-items: center;  padding: 13px 0 3px 0;}.r-sd--group > .r-sd--group--header > .r-sd--group--title {  font-size: 12px;  font-weight: bold;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--header > .r-sd--group--subreddit {  font-size: 12px;  padding: 0.125em 0.5em;}.r-sd--group > .r-sd--group--actions {  display: flex;  flex-direction: row;  align-items: center;}.r-sd--group > .r-sd--group--actions > button {  background-color: #323232 !important;  border: 1px solid #646464 !important;  color: silver !important;  margin: 0 0.5em;}.r-sd--group > .r-sd--group--actions > .r-sd--progress {  background-color: #323232 !important;  border: 1px solid #5f99cf !important;  border-radius: 5px;  height: 20px;  margin: 0 0.5em;  position: relative;  width: 400px;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--inner {  background-color: rgba(239 247 255 / 0.125) !important;  border-radius: 5px;  height: 100%;  transition: ease-in-out 200ms;  width: 0%;}.r-sd--group > .r-sd--group--actions > .r-sd--progress > .r-sd--progress--text {  bottom: 0;  color: silver !important;  left: 0;  line-height: 20px;  position: absolute;  right: 0;  text-align: center;  top: 0;  z-index: 10;}.thing.r-sd--success {  background-color: rgba(0, 255, 0, 0.125) !important;}.thing.r-sd--failure {  background-color: rgba(255, 0, 0, 0.125) !important;}.thing .r-sd--thing--actions {  float: left;  margin-right: 5px;}.thing .r-sd--thing--actions > button {  font-size: 1em;  background-color: #323232 !important;  border: 1px solid #646464 !important;  color: silver !important;  margin: 0 0.5em;}.thing .r-sd--thing--actions > button.r-sd--thing--actions--title {  display: none;}.thing.r-sd--nonSpec .thing .r-sd--thing--actions > button {  display: inline;}.r-sd--divider {  background-color: #f5f5f5;  font-weight: bold;  color: #808080;  margin-top: 3em;  padding: 0.5em;  text-align: center;}';
 			document.body.append(style);
 		}
 		
