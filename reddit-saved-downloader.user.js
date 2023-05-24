@@ -313,7 +313,6 @@ class Thing {
 		].join('-');
 
 		switch (domain) {
-			case 'i.redgifs.com':
 			case 'v3.redgifs.com':
 			case 'redgifs.com': {
 				handled = true;
