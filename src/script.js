@@ -24,6 +24,7 @@
 import { Downloader } from "./Downloader.js";
 import { log } from "./lib/basics.js";
 import { RedgifsDownloader } from "./redgifs/RedgifsDownloader.js";
+import { RedgifsImageDownloader } from "./redgifs/RedgifsImageDownloader.js";
 
 (function() {
     'use strict';
@@ -37,6 +38,8 @@ import { RedgifsDownloader } from "./redgifs/RedgifsDownloader.js";
 			log('dl this!');
 			const dl = new RedgifsDownloader();
 			dl.run();
+			const idl = new RedgifsImageDownloader();
+			idl.run();
 		}
 	}
 })();

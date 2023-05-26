@@ -119,17 +119,22 @@ export class Thing {
 		].join('-');
 
 		switch (domain) {
+			case 'i.redgifs.com':
 			case 'v3.redgifs.com':
 			case 'redgifs.com': {
+				let dlKey = 'redgifs';
+				if (domain == 'i.redgifs.com') {
+					dlKey = 'i-redgifs';
+				}
 				handled = true;
-				const key = url.replace(/^.+\/([^\/]+)$/, '$1');
-				GM_setValue(`r-sd--redgifs--${key}`, 'waiting');
-				GM_setValue(`r-sd--redgifs--${key}--filename`, `${this.target}/${folder}/Random/${key}.mp4`);
-				const red = GM_openInTab(`${url}#r-sd--dl-this`);
+				const key = url.replace(/^.+\/([^\/]+)$/, '$1').split('.')[0];
+				GM_setValue(`r-sd--${dlKey}--${key}`, 'waiting');
+				GM_setValue(`r-sd--${dlKey}--${key}--filename`, `${this.target}/${folder}/Random/${key}.mp4`);
+				const red = GM_openInTab(`${url}#r-sd--dl-this`, {active:true});
 				let done = false;
 				while (!done) {
 					await wait(100);
-					const status = GM_getValue(`r-sd--redgifs--${key}`);
+					const status = GM_getValue(`r-sd--${dlKey}--${key}`);
 					log(key, status);
 					switch (status) {
 						case 'waiting': {

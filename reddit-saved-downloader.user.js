@@ -25,6 +25,7 @@
 
 
 
+
 (function() {
     'use strict';
 
@@ -313,17 +314,22 @@ class Thing {
 		].join('-');
 
 		switch (domain) {
+			case 'i.redgifs.com':
 			case 'v3.redgifs.com':
 			case 'redgifs.com': {
+				let dlKey = 'redgifs';
+				if (domain == 'i.redgifs.com') {
+					dlKey = 'i-redgifs';
+				}
 				handled = true;
-				const key = url.replace(/^.+\/([^\/]+)$/, '$1');
-				GM_setValue(`r-sd--redgifs--${key}`, 'waiting');
-				GM_setValue(`r-sd--redgifs--${key}--filename`, `${this.target}/${folder}/Random/${key}.mp4`);
-				const red = GM_openInTab(`${url}#r-sd--dl-this`);
+				const key = url.replace(/^.+\/([^\/]+)$/, '$1').split('.')[0];
+				GM_setValue(`r-sd--${dlKey}--${key}`, 'waiting');
+				GM_setValue(`r-sd--${dlKey}--${key}--filename`, `${this.target}/${folder}/Random/${key}.mp4`);
+				const red = GM_openInTab(`${url}#r-sd--dl-this`, {active:true});
 				let done = false;
 				while (!done) {
 					await wait(100);
-					const status = GM_getValue(`r-sd--redgifs--${key}`);
+					const status = GM_getValue(`r-sd--${dlKey}--${key}`);
 					log(key, status);
 					switch (status) {
 						case 'waiting': {
@@ -1040,6 +1046,11 @@ class Downloader {
 class RedgifsDownloader {
 	async run() {
 		const key = location.pathname.replace(/^.+\/([^\/]+)$/, '$1');
+		const status = GM_getValue(`r-sd--redgifs--${key}`);
+		if (status != 'waiting') {
+			log('not from downloader');
+			return;
+		}
 		let found = false;
 		let qualityButton;
 		while (!found) {
@@ -1072,6 +1083,60 @@ class RedgifsDownloader {
 
 	}
 }
+
+
+// src\redgifs\RedgifsImageDownloader.js
+
+
+
+class RedgifsImageDownloader {
+	async run() {
+		const key = location.pathname.replace(/^.+\/([^\/]+)$/, '$1');
+		const status = GM_getValue(`r-sd--i-redgifs--${key}`);
+		if (status != 'waiting') {
+			log('not from downloader');
+			return;
+		}
+		log(status);
+		let found = false;
+		let fsButton;
+		while (!found) {
+			log('finding full-screen button');
+			const buttons = $$('.sideBar > .fs > svg');
+			if (buttons.length > 0) {
+				log('found');
+				found = true;
+				fsButton = buttons[0];
+			} else {
+				log('not found');
+				await wait(100);
+			}
+		}
+		while (!document.fullscreenElement) {
+			fsButton.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+			await wait(200);
+		}
+		let url = '';
+		while (url.toLowerCase().search(`${key}-large.`) == -1) {
+			log(url);
+			await wait(100);
+			url = $('.previewFeed > .player > img.thumbnail').src;
+		}
+		const fn = GM_getValue(`r-sd--i-redgifs--${key}--filename`);
+		GM_setValue(`r-sd--i-redgifs--${key}`, 'downloading');
+		document.exitFullscreen();
+		try {
+			await download({
+				url: url,
+				name: fn,
+			});
+			GM_setValue(`r-sd--i-redgifs--${key}`, 'done');
+		} catch (ex) {
+			log('FAILED', ex);
+			GM_setValue(`r-sd--i-redgifs--${key}`, 'error');
+		}
+	}
+}
 // ---------------- /IMPORTS ----------------
 
 
@@ -1082,6 +1147,8 @@ class RedgifsDownloader {
 			log('dl this!');
 			const dl = new RedgifsDownloader();
 			dl.run();
+			const idl = new RedgifsImageDownloader();
+			idl.run();
 		}
 	}
 })();

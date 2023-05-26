@@ -4,6 +4,11 @@ import { download } from "../lib/download.js";
 export class RedgifsDownloader {
 	async run() {
 		const key = location.pathname.replace(/^.+\/([^\/]+)$/, '$1');
+		const status = GM_getValue(`r-sd--redgifs--${key}`);
+		if (status != 'waiting') {
+			log('not from downloader');
+			return;
+		}
 		let found = false;
 		let qualityButton;
 		while (!found) {
