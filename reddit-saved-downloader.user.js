@@ -2,7 +2,7 @@
 // @name         Reddit - Saved Downloader
 // @namespace    https://github.com/LenAnderson/
 // @downloadURL  https://github.com/LenAnderson/reddit-saved-downloader/raw/master/reddit-saved-downloader.user.js
-// @version      1.12
+// @version      1.14
 // @description  Simple way to download media from saved posts and comments.
 // @author       LenAnderson
 // @match        https://www.reddit.com/user/*/saved/*
@@ -211,6 +211,10 @@ class Thing {
 	/**@type{Boolean}*/ isDownloaded = false;
 
 	/**@type{Function}*/ onUserChange;
+
+	get isUnsaved() {
+		return $(this.element, '.link-unsave-button > a, .comment-unsave-button > a')?.textContent?.toLowerCase()?.search('unsave') ?? -1 == -1;
+	}
 
 
 
@@ -755,8 +759,8 @@ class Group {
 	}
 
 	async unsave() {
-		log('Group.unsave', this);
-		for (const thing of this.things.filter(it=>it.isDownloaded)) {
+		log('Group.unsave', this, this.things.filter(it=>it.isDownloaded||it.isUnsaved), this.things.filter(it=>it.isUnsaved));
+		for (const thing of this.things.filter(it=>(it.isDownloaded||it.isUnsaved))) {
 			await thing.unsave();
 			this.things.splice(this.things.indexOf(thing), 1);
 		}
