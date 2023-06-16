@@ -219,7 +219,7 @@ export class Group {
 
 	async unsave() {
 		log('Group.unsave', this);
-		for (const thing of this.things.filter(it=>it.isDownloaded)) {
+		for (const thing of this.things.filter(it=>it.isDownloaded||it.isUnsaved)) {
 			await thing.unsave();
 			this.things.splice(this.things.indexOf(thing), 1);
 		}

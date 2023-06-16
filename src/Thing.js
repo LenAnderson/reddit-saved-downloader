@@ -17,6 +17,10 @@ export class Thing {
 
 	/**@type{Function}*/ onUserChange;
 
+	get isUnsaved() {
+		$(this.element, '.link-unsave-button > a, .comment-unsave-button > a')?.textContent?.toLowerCase()?.search('unsave') == -1;
+	}
+
 
 
 
