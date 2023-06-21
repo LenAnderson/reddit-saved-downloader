@@ -336,8 +336,10 @@ export class Thing {
 
 	async unsave() {
 		log('Thing.unsave', this);
-		$(this.element, '.link-unsave-button > a, .comment-unsave-button > a').click();
-		await wait(100);
+		if (!this.isUnsaved) {
+			$(this.element, '.link-unsave-button > a, .comment-unsave-button > a').click();
+			await wait(100);
+		}ö
 		this.element.remove();
 	}
 }
