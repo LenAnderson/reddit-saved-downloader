@@ -534,7 +534,7 @@ class Thing {
 		if (!this.isUnsaved) {
 			$(this.element, '.link-unsave-button > a, .comment-unsave-button > a').click();
 			await wait(100);
-		}ö
+		}
 		this.element.remove();
 	}
 }
